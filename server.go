@@ -1,17 +1,26 @@
 package main
 
 import (
-	"net/http"
-
+	"github.com/bennu7/golang-rest/config"
+	"github.com/bennu7/golang-rest/controller"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
+
+var (
+	db             *gorm.DB                  = config.SetUpDBConnection()
+	authController controller.AuthController = controller.NewAuthController()
 )
 
 func main() {
+	defer config.CloseDatabaseConnection(db)
 	r := gin.Default()
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-	r.Run(":8001") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+
+	authRoutes := r.Group("/api/auth")
+	{
+		authRoutes.GET("/login", authController.Login)
+		authRoutes.POST("/register", authController.Register)
+	}
+
+	r.Run(":8001")
 }
